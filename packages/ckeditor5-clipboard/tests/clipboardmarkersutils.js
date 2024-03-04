@@ -34,7 +34,7 @@ describe( 'Clipboard Markers Utils', () => {
 
 	describe( 'Check markers selection intersection', () => {
 		beforeEach( () => {
-			clipboardMarkersUtils._registerMarkerToCopy( 'comment', [ 'copy' ] );
+			clipboardMarkersUtils._registerMarkerToCopy( 'comment', { allowedActions: [ 'copy' ] } );
 		} );
 
 		it( 'should copy and paste marker that is inside selection', () => {
@@ -611,15 +611,15 @@ describe( 'Clipboard Markers Utils', () => {
 
 	describe( '_forceMarkersCopy', () => {
 		it( 'properly reverts old marker restricted actions', () => {
-			clipboardMarkersUtils._registerMarkerToCopy( 'comment', [ 'cut' ] );
+			clipboardMarkersUtils._registerMarkerToCopy( 'comment', { allowedActions: [ 'cut' ] } );
 
-			expect( getMarkerRestrictions() ).deep.equal( [ 'cut' ] );
+			expect( getMarkerRestrictions() ).deep.equal( { allowedActions: [ 'cut' ] } );
 
 			clipboardMarkersUtils._forceMarkersCopy( 'comment', () => {
 				expect( getMarkerRestrictions() ).deep.equal( clipboardMarkersUtils._mapRestrictionPresetToActions( 'always' ) );
 			} );
 
-			expect( getMarkerRestrictions() ).deep.equal( [ 'cut' ] );
+			expect( getMarkerRestrictions() ).deep.equal( { allowedActions: [ 'cut' ] } );
 		} );
 
 		function getMarkerRestrictions() {
@@ -637,7 +637,7 @@ describe( 'Clipboard Markers Utils', () => {
 
 	describe( '_getCopyableMarkersFromRangeMap', () => {
 		it( 'properly filters markers Map instance', () => {
-			clipboardMarkersUtils._registerMarkerToCopy( 'comment', [ 'cut' ] );
+			clipboardMarkersUtils._registerMarkerToCopy( 'comment', { allowedActions: [ 'cut' ] } );
 
 			const { markers } = createFragmentWithMarkers(
 				wrapWithTag( 'paragraph', 'Hello world' ),
@@ -658,7 +658,7 @@ describe( 'Clipboard Markers Utils', () => {
 		} );
 
 		it( 'properly filters markers Record instance', () => {
-			clipboardMarkersUtils._registerMarkerToCopy( 'comment', [ 'cut' ] );
+			clipboardMarkersUtils._registerMarkerToCopy( 'comment', { allowedActions: [ 'cut' ] } );
 
 			const markers = Object.fromEntries(
 				createFragmentWithMarkers(
@@ -837,7 +837,7 @@ describe( 'Clipboard Markers Utils', () => {
 		viewDocument = editor.editing.view.document;
 
 		clipboardMarkersUtils = editor.plugins.get( 'ClipboardMarkersUtils' );
-		clipboardMarkersUtils._registerMarkerToCopy( 'comment', [ ] );
+		clipboardMarkersUtils._registerMarkerToCopy( 'comment', { allowedActions: [ ] } );
 
 		getUniqueMarkerNameStub = sinon
 			.stub( clipboardMarkersUtils, '_getUniqueMarkerName' )
