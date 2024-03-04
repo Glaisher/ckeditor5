@@ -47,14 +47,16 @@ export default class ClipboardMarkersUtils extends Plugin {
 	 * Registers marker name as copyable in clipboard pipeline.
 	 *
 	 * @param markerName Name of marker that can be copied.
-	 * @param presetOrConfig Preset or specified configuration that describes what be performed on specified marker name.
+	 * @param presetOrConfig Preset or specified configuration that describes what can be performed on specified marker.
 	 * @internal
 	 */
 	public _registerMarkerToCopy(
 		markerName: string,
-		presetOrConfig: ClipboardMarkerRestrictionsPreset | ClipboardMarkerConfiguration
+		presetOrConfig: ClipboardMarkerActionsPreset | ClipboardMarkerConfiguration
 	): void {
-		const config = typeof presetOrConfig === 'string' ? this._mapRestrictionPresetToActions( presetOrConfig ) : presetOrConfig;
+		const config = typeof presetOrConfig === 'string' ? {
+			allowedActions: this._mapRestrictionPresetToActions( presetOrConfig )
+		} : presetOrConfig;
 
 		if ( config.allowedActions.length ) {
 			this._markersToCopy.set( markerName, config );
@@ -67,33 +69,23 @@ export default class ClipboardMarkersUtils extends Plugin {
 	 * @param preset Restrictions preset to be mapped to actions
 	 * @internal
 	 */
-	private _mapRestrictionPresetToActions( preset: ClipboardMarkerRestrictionsPreset ): ClipboardMarkerConfiguration {
+	private _mapRestrictionPresetToActions( preset: ClipboardMarkerActionsPreset ): Array<ClipboardMarkerRestrictedAction> {
 		switch ( preset ) {
 			case 'always':
-				return {
-					allowedActions: [ 'copy', 'cut', 'dragstart' ],
-					skipPartiallySelected: false
-				};
+				return [ 'copy', 'cut', 'dragstart' ];
 
 			case 'default':
-				return {
-					allowedActions: [ 'cut', 'dragstart' ],
-					skipPartiallySelected: true
-				};
+				return [ 'cut', 'dragstart' ];
 
 			case 'never':
-				return {
-					allowedActions: []
-				};
+				return [];
 
 			default: {
 				// Skip unrecognized type.
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const unreachable: never = preset;
 
-				return {
-					allowedActions: []
-				};
+				return [];
 			}
 		}
 	}
@@ -224,12 +216,16 @@ export default class ClipboardMarkersUtils extends Plugin {
 	 *
 	 * @param markerName Which markers should be copied.
 	 * @param executor Callback executed.
+	 * @param config Additional configuration flags used by copy (such as partial copy flag).
 	 * @internal
 	 */
-	public _forceMarkersCopy( markerName: string, executor: VoidFunction ): void {
+	public _forceMarkersCopy( markerName: string, executor: VoidFunction, config?: ClipboardMarkerConfiguration ): void {
 		const before = this._markersToCopy.get( markerName );
 
-		this._markersToCopy.set( markerName, this._mapRestrictionPresetToActions( 'always' ) );
+		this._markersToCopy.set( markerName, {
+			allowedActions: this._mapRestrictionPresetToActions( 'always' ),
+			...config
+		} );
 
 		executor();
 
@@ -347,9 +343,9 @@ export default class ClipboardMarkersUtils extends Plugin {
 			//					     ^ selection
 			//
 			// In this scenario `marker-a` will be not copied because selection does not overlaps it's content entirely.
-			const { skipPartiallySelected } = this._getMarkerClipboardConfig( marker.name )!;
+			const { withPartiallySelected } = this._getMarkerClipboardConfig( marker.name )!;
 
-			if ( skipPartiallySelected ) {
+			if ( !withPartiallySelected ) {
 				const markerRange = marker.getRange();
 
 				return selectionRanges.some( selectionRange => selectionRange.containsRange( markerRange, true ) );
@@ -599,16 +595,6 @@ export default class ClipboardMarkersUtils extends Plugin {
 export type ClipboardMarkerRestrictedAction = 'copy' | 'cut' | 'dragstart';
 
 /**
- * Specifies behavior of markers during clipboard actions.
- *
- * @internal
- */
-export type ClipboardMarkerConfiguration = {
-	allowedActions: Array<ClipboardMarkerRestrictedAction>;
-	skipPartiallySelected?: boolean; // If true, do not copy marker when only part of its content is selected.
-};
-
-/**
  * Specifies copy, paste or move marker restrictions in clipboard. Depending on specified mode
  * it will disallow copy, cut or paste of marker in clipboard.
  *
@@ -618,7 +604,17 @@ export type ClipboardMarkerConfiguration = {
  *
  * @internal
  */
-export type ClipboardMarkerRestrictionsPreset = 'default' | 'always' | 'never';
+export type ClipboardMarkerActionsPreset = 'default' | 'always' | 'never';
+
+/**
+ * Specifies behavior of markers during clipboard actions.
+ *
+ * @internal
+ */
+export type ClipboardMarkerConfiguration = {
+	allowedActions: Array<ClipboardMarkerRestrictedAction>;
+	withPartiallySelected?: boolean; // If false, do not copy marker when only part of its content is selected.
+};
 
 /**
  * Marker descriptor type used to revert markers into tree node.
