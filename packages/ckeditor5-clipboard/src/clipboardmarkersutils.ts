@@ -324,8 +324,8 @@ export default class ClipboardMarkersUtils extends Plugin {
 	): Array<CopyableMarker> {
 		const selectionRanges = Array.from( selection.getRanges()! );
 
-		// Picks all markers in provided ranges. Makes sure that marker is not duplicated in situation
-		// when multiple ranges intersects the same marker.
+		// Picks all markers in provided ranges. Makes sure that there are no duplications if
+		// there are multiple ranges that intersects with the same marker.
 		const markersInRanges = new Set(
 			selectionRanges.flatMap(
 				selectionRange => Array.from( writer.model.markers.getMarkersIntersectingRange( selectionRange ) )
@@ -344,7 +344,7 @@ export default class ClipboardMarkersUtils extends Plugin {
 			//
 			// Example:
 			// 	<marker-a> Hello [ World ] </marker-a>
-			//					   ^ selection
+			//					     ^ selection
 			//
 			// In this scenario `marker-a` will be not copied because selection does not overlaps it's content entirely.
 			const { skipPartiallySelected } = this._getMarkerClipboardConfig( marker.name )!;
