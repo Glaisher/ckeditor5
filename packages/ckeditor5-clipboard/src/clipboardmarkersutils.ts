@@ -352,7 +352,7 @@ export default class ClipboardMarkersUtils extends Plugin {
 			if ( skipPartiallySelected ) {
 				const markerRange = marker.getRange();
 
-				return selectionRanges.some( selectionRange => selectionRange.containsRange( markerRange ) );
+				return selectionRanges.some( selectionRange => selectionRange.containsRange( markerRange, true ) );
 			}
 
 			return true;

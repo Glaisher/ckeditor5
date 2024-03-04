@@ -627,9 +627,9 @@ describe( 'Clipboard Markers Utils', () => {
 		}
 	} );
 
-	describe( '_canPerformMarkerClipboardAction', () => {
+	describe( '_isMarkerCopyable', () => {
 		it( 'returns false on non existing clipboard markers', () => {
-			const result = clipboardMarkersUtils._canPerformMarkerClipboardAction( 'Hello', 'cut' );
+			const result = clipboardMarkersUtils._isMarkerCopyable( 'Hello', 'cut' );
 
 			expect( result ).to.false;
 		} );
